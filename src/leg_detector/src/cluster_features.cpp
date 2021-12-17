@@ -33,9 +33,11 @@
  *********************************************************************/
 
 #include "leg_detector/cluster_features.h"
+#include <opencv2/core/types_c.h>
+#include <opencv2/core/core_c.h> 
 
-#include <opencv/cxcore.h>
-#include <opencv/cv.h>
+//#include <opencv/cxcore.h>  //  is from the deprecated, no more maintained c-api. you MUST NOT use it. if your code contains IplImage, - throw it away entirely, it's no more usable.
+// #include <opencv/cv.h>
 
 
 std::vector<float> ClusterFeatures::calcClusterFeatures(const laser_processor::SampleSet* cluster, const sensor_msgs::msg::LaserScan& scan)
