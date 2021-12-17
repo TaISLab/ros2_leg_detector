@@ -8,8 +8,8 @@ import launch
 import os
 
 leg_detector_path = get_package_share_directory('leg_detector')
-rosbag_uri = os.getenv("HOME") + "bagsFolder/" + '20211214-142719-bag'
-forest_file_path = leg_detector_path + "/config/trained_leg_detector_res=0.33.yaml"
+rosbag_uri = os.path.join( os.getenv("HOME") , "bagsFolder", "20211214-142719-bag")
+forest_file_path = os.path.join( leg_detector_path, "config", "trained_leg_detector_res=0.33.yaml")
 #rviz2_config_path = leg_detector_path + "/rosbag/demos/rviz/demo_stationary_simple_environment.rviz"
 
 
@@ -32,6 +32,8 @@ def generate_launch_description():
                 get_package_share_directory("leg_detector"),
                 "config", "laser_box_filter.yaml",
             ])],
+        remappings=[ ("scan", "scan_filtered"),
+                     ("scan_filtered", "scan_filtered2")]
     )
 
     # Launching detect_leg_clusters node
