@@ -57,24 +57,27 @@ def generate_launch_description():
             ]
     )
 
+    # Launching joint_leg_tracker node
+    joint_leg_tracker_node = Node(
+        package="leg_detector",
+        executable="joint_leg_tracker.py",
+        name="joint_leg_tracker",
+        parameters=[
+            {"scan_topic" : "/scan_filtered2"},
+            {"fixed_frame" : "laser"},
+            {"scan_frequency" : 5},
+            {"display_detected_people": True},
+            {"in_free_space_threshold": 0.2},
+            {"dist_travelled_together_to_initiate_leg_pair": 0.02}
+        ]    
+    )
+
     ld.add_action(laser_filter2_node)
     ld.add_action(rosbag_cmd)
     ld.add_action(detect_leg_clusters_node)
     ld.add_action(rviz_cmd)
-
-
-    # # Launching joint_leg_tracker node
-    # joint_leg_tracker_node = Node(
-    #     package="leg_detector",
-    #     executable="joint_leg_tracker.py",
-    #     name="joint_leg_tracker",
-    #     parameters=[
-    #         {"scan_topic" : "/scan"},
-    #         {"fixed_frame" : "laser"},
-    #         {"scan_frequency" : 10}
-    #     ]    
-    # )
-
+    ld.add_action(joint_leg_tracker_node)
+    
     # # Launching inflated_human_scan node
     # inflated_human_scan_node = Node(
     #     package="leg_detector",

@@ -26,13 +26,24 @@ import scipy.stats
 import scipy.spatial
 from geometry_msgs.msg import PointStamped, Point, Quaternion
 import tf2_ros
-import tf2_py
-import tf2_geometry_msgs
-import tf2_kdl
-import copy
-import timeit
-import message_filters
 import sys
+import copy
+
+# import tf2_py
+
+DO_TRANSFORM = True
+
+try:
+    import tf2_geometry_msgs
+
+except ModuleNotFoundError:
+    print("Not importing tf2_geometry")
+    DO_TRANSFORM = False
+
+
+# import tf2_kdl
+# import timeit
+# import message_filters
 
 # external packages
 from pykalman import KalmanFilter
@@ -557,14 +568,21 @@ class KalmanMultiTrackerNode(Node):
                     ps.header.stamp = tf_time
                     ps.point.x = track.pos_x
                     ps.point.y = track.pos_y
-                    try:
-                        ps = self.buffer.transform(ps, self.publish_people_frame)
-                    except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-                        continue
+
+                    if (DO_TRANSFORM):
+                        try:
+                            ps = self.buffer.transform(ps, self.publish_people_frame)
+                        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                            continue
 
                     # publish rviz markers
                     marker = Marker()
-                    marker.header.frame_id =  self.publish_people_frame
+
+                    if (DO_TRANSFORM):
+                        marker.header.frame_id =  self.publish_people_frame
+                    else:
+                        marker.header.frame_id =  "laser"
+
                     marker.header.stamp = now
                     marker.ns = "objects_tracked"
                     if track.in_free_space < self.in_free_space_threshold:
@@ -637,7 +655,12 @@ class KalmanMultiTrackerNode(Node):
     def publish_tracked_people(self, now):
         people_tracked_msg = PersonArray()
         people_tracked_msg.header.stamp = now
-        people_tracked_msg.header.frame_id = self.publish_people_frame
+
+        if (DO_TRANSFORM):                        
+            people_tracked_msg.header.frame_id = self.publish_people_frame
+        else:
+            people_tracked_msg.header.frame_id = "laser"
+
         marker_id = 0
 
         # Make sure we can get the required transform first:
@@ -665,11 +688,13 @@ class KalmanMultiTrackerNode(Node):
                         ps.header.stamp = tf_time.to_msg()
                         ps.point.x = person.pos_x
                         ps.point.y = person.pos_y
-                        try:
-                            ps = self.buffer.transform(ps, self.publish_people_frame)
-                        except:
-                            self.get_logger().error("Not publishing people due to no transform from fixed_frame-->publish_people_frame")
-                            continue
+
+                        if (DO_TRANSFORM):
+                            try:
+                                ps = self.buffer.transform(ps, self.publish_people_frame)
+                            except:
+                                self.get_logger().error("Not publishing people due to no transform from fixed_frame-->publish_people_frame")
+                                continue
 
                         # pulish to people_tracked topic
                         new_person = Person()
@@ -687,12 +712,17 @@ class KalmanMultiTrackerNode(Node):
                         # publish rviz markers       
                         # Cylinder for body
                         marker = Marker()
-                        marker.header.frame_id = self.publish_people_frame
+
+                        if (DO_TRANSFORM):                                                
+                            marker.header.frame_id = self.publish_people_frame
+                        else:
+                            marker.header.frame_id = "laser"
+
                         marker.header.stamp = now
                         marker.ns = "People_tracked"
-                        marker.color.r = person.colour[0]
-                        marker.color.g = person.colour[1]
-                        marker.color.b = person.colour[2]
+                        marker.color.r = 1 #person.colour[0]
+                        marker.color.g = 0 #person.colour[1]
+                        marker.color.b = 0 #person.colour[2]
                         #marker.color.a = (rclpy.time.Duration(3) - (self.get_clock().now().to_msg() - person.last_seen)).nanoseconds()/rclpy.time.Duration(3).nanoseconds() + 0.1
                         marker.color.a = 1.0
                         marker.pose.position.x = ps.point.x 
