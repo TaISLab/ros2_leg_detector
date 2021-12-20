@@ -79,6 +79,7 @@ public:
         this->declare_parameter("detection_threshold");
         this->declare_parameter("cluster_dist_euclid");
         this->declare_parameter("min_points_per_cluster");
+        this->declare_parameter("detect_distance_frame_id");
         this->declare_parameter("max_detect_distance");
         this->declare_parameter("marker_display_lifetime");
         this->declare_parameter("use_scan_header_stamp_for_tfs");
@@ -90,6 +91,7 @@ public:
         this->get_parameter_or("detection_threshold", detection_threshold_, -1.0);
         this->get_parameter_or("cluster_dist_euclid", cluster_dist_euclid_, 0.13);
         this->get_parameter_or("min_points_per_cluster", min_points_per_cluster_, 3);
+        this->get_parameter_or("detect_distance_frame_id", detect_distance_frame_id_, std::string("base_link"));
         this->get_parameter_or("max_detect_distance", max_detect_distance_, 10.0);
         this->get_parameter_or("marker_display_lifetime", marker_display_lifetime_, 0.2);
         this->get_parameter_or("use_scan_header_stamp_for_tfs", use_scan_header_stamp_for_tfs_, false);
@@ -102,6 +104,7 @@ public:
         RCLCPP_INFO(this->get_logger(), "detection_threshold: %.2f", detection_threshold_);
         RCLCPP_INFO(this->get_logger(), "cluster_dist_euclid: %.2f", cluster_dist_euclid_);
         RCLCPP_INFO(this->get_logger(), "min_points_per_cluster: %d", min_points_per_cluster_);
+        RCLCPP_INFO(this->get_logger(), "detect_distance_frame_id: %s", detect_distance_frame_id_.c_str());
         RCLCPP_INFO(this->get_logger(), "max_detect_distance: %.2f", max_detect_distance_);
         RCLCPP_INFO(this->get_logger(), "marker_display_lifetime: %.2f", marker_display_lifetime_);
         RCLCPP_INFO(this->get_logger(), "use_scan_header_stamp_for_tfs: %d", use_scan_header_stamp_for_tfs_);
@@ -156,6 +159,7 @@ private:
     double detection_threshold_;
     double cluster_dist_euclid_;
     int min_points_per_cluster_;
+    std::string detect_distance_frame_id_;
     double max_detect_distance_;
     double marker_display_lifetime_;
     int max_detected_clusters_;
@@ -221,14 +225,20 @@ private:
             // Iterate through all clusters
             for (std::list<laser_processor::SampleSet*>::iterator cluster = processor.getClusters().begin();cluster != processor.getClusters().end(); cluster++)
             {
-                // Get position of cluster in laser frame
-                std::string frame_id = scan->header.frame_id;                               
+                // Cluster position in laser frame
                 geometry_msgs::msg::PointStamped position;
-                geometry_msgs::msg::PointStamped position1;
-                position.header.frame_id = frame_id;
-                position.header.stamp = scan->header.stamp;
+                position.header = scan->header;
                 position.point = (*cluster)->getPosition();
-                float rel_dist = pow(position.point.x*position.point.x + position.point.y*position.point.y, 1./2.);
+
+                // transform
+                geometry_msgs::msg::PointStamped position_new;
+                float rel_dist = 4092.0;
+                try {
+                    buffer_->transform(position, position_new, detect_distance_frame_id_);
+                    rel_dist = pow(position_new.point.x*position_new.point.x + position_new.point.y*position_new.point.y, 1./2.);
+                } catch (tf2::TransformException &e){
+                    RCLCPP_ERROR (this->get_logger(), "%s", e.what());
+                }
 
                 // Only consider clusters within max_distance
                 if (rel_dist < max_detect_distance_) {
@@ -307,6 +317,7 @@ private:
             m.color.r = leg.confidence;
             m.color.g = leg.confidence;
             m.color.b = leg.confidence;
+            m.lifetime = rclcpp::Duration(marker_display_lifetime_);
             markers_pub_->publish(m);
 
             // Comparison using '==' and not '>=' is important, as it allows <max_detected_clusters_>=-1 

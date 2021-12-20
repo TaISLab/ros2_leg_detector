@@ -10,7 +10,7 @@ import os
 leg_detector_path = get_package_share_directory('leg_detector')
 rosbag_uri = os.path.join( os.getenv("HOME") , "bagsFolder", "20211214-142719-bag")
 forest_file_path = os.path.join( leg_detector_path, "config", "trained_leg_detector_res=0.33.yaml")
-#rviz2_config_path = leg_detector_path + "/rosbag/demos/rviz/demo_stationary_simple_environment.rviz"
+rviz2_config_path = os.path.join( leg_detector_path, "config", "demo_stationary_simple_environment.rviz") 
 
 
 def generate_launch_description():
@@ -20,6 +20,11 @@ def generate_launch_description():
     # Launching Rosbag node
     rosbag_cmd = launch.actions.ExecuteProcess(
             cmd=['ros2', 'bag', 'play', '-s', 'sqlite3', rosbag_uri],
+            output='screen'
+    )
+
+    rviz_cmd = launch.actions.ExecuteProcess(
+            cmd=['ros2', 'run', 'rviz2', 'rviz2','-d', rviz2_config_path],
             output='screen'
     )
 
@@ -43,6 +48,10 @@ def generate_launch_description():
             name="detect_leg_clusters",
             parameters= [
                 {"forest_file" : forest_file_path},
+                {"marker_display_lifetime": 0.01},
+                {"max_detected_clusters": 2},
+                {"detect_distance_frame_id": "base_link"},
+                {"max_detect_distance": 0.45},
                 {"scan_topic" : "/scan_filtered2"},
                 {"fixed_frame" : "laser"},
             ]
@@ -51,13 +60,8 @@ def generate_launch_description():
     ld.add_action(laser_filter2_node)
     ld.add_action(rosbag_cmd)
     ld.add_action(detect_leg_clusters_node)
+    ld.add_action(rviz_cmd)
 
-
-    # Launching RVIZ2
-    # launch.actions.ExecuteProcess(
-    #     cmd=['ros2', 'run', 'rviz2', 'rviz2', '-d', rviz2_config_path],
-    #     output='screen'
-    # )
 
     # # Launching joint_leg_tracker node
     # joint_leg_tracker_node = Node(
