@@ -164,6 +164,10 @@ private:
     double marker_display_lifetime_;
     int max_detected_clusters_;
 
+    bool is_first;
+    leg_detector_msgs::msg::Leg prev_leg_r;
+    leg_detector_msgs::msg::Leg prev_leg_l;
+    
     //create the publisher and subscribers
 
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr markers_pub_;
