@@ -76,7 +76,7 @@ def generate_launch_description():
     ld.add_action(rosbag_cmd)
     ld.add_action(detect_leg_clusters_node)
     ld.add_action(rviz_cmd)
-    ld.add_action(joint_leg_tracker_node)
+    #ld.add_action(joint_leg_tracker_node)
     
     # # Launching inflated_human_scan node
     # inflated_human_scan_node = Node(

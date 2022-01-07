@@ -134,6 +134,8 @@ public:
                                                             this->get_node_base_interface(),
                                                             this->get_node_timers_interface());
         buffer_->setCreateTimerInterface(timer_interface);
+        prev_leg_r_timestamp_ = rclcpp::Time(0);
+        prev_leg_l_timestamp_ = rclcpp::Time(0);        
     }
 
 private:
@@ -164,10 +166,11 @@ private:
     double marker_display_lifetime_;
     int max_detected_clusters_;
 
-    bool is_first;
-    leg_detector_msgs::msg::Leg prev_leg_r;
-    leg_detector_msgs::msg::Leg prev_leg_l;
-    
+    leg_detector_msgs::msg::Leg prev_leg_r_;
+    leg_detector_msgs::msg::Leg prev_leg_l_;
+    rclcpp::Time prev_leg_r_timestamp_;
+    rclcpp::Time prev_leg_l_timestamp_;
+
     //create the publisher and subscribers
 
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr markers_pub_;
@@ -295,41 +298,93 @@ private:
         }
 
         // Publish detected legs to /detected_leg_clusters and to rviz
-        // They are ordered from closest to the laser scanner to furthest
+        // They are ordered in leg_set from closest to the laser scanner to furthest
         int clusters_published_counter = 0;
         int id_num = 1;
+        double leg_r_vel, leg_l_vel;
+        visualization_msgs::msg::Marker leg_l_marker, leg_r_marker;
 
-        for (std::set<leg_detector_msgs::msg::Leg>::iterator it = leg_set.begin(); it != leg_set.end(); ++it){
+        leg_detector_msgs::msg::Leg leg_l, leg_r;
+        rclcpp::Time leg_r_timestamp = rclcpp::Time(0);
+        rclcpp::Time leg_l_timestamp = rclcpp::Time(0);
+        
+        if (leg_set.size() > 1)
+        {
+            leg_l = *std::next(leg_set.begin(), 0);
+            leg_r = *std::next(leg_set.begin(), 1);            
+            
+            // we should have (left.y < right.y)
+            if (leg_l.position.y>leg_r.position.y){
+                leg_l = *std::next(leg_set.begin(), 1); 
+                leg_r = *std::next(leg_set.begin(), 0);
+            }
+            leg_l_timestamp = this->now();
+            leg_r_timestamp = this->now();
 
+            detected_leg_clusters.legs.push_back(leg_l);
+            detected_leg_clusters.legs.push_back(leg_r);            
+            clusters_published_counter=2;
+
+            // get speeds
+            leg_r_vel = get_speed(leg_r, leg_r_timestamp, prev_leg_r_, prev_leg_r_timestamp_);
+            leg_l_vel = get_speed(leg_l, leg_l_timestamp, prev_leg_l_, prev_leg_l_timestamp_);
+            print_leg(leg_r, "right_b");
+            //print_leg(leg_l, "left");
+            
             // Publish to /detected_leg_clusters topic
-            leg_detector_msgs::msg::Leg leg = *it;
-            detected_leg_clusters.legs.push_back(leg);
-            clusters_published_counter++;
-            visualization_msgs::msg::Marker m;
-            m.header.stamp = scan->header.stamp;
-            m.header.frame_id = fixed_frame_;
-            m.ns = "LEGS";
-            m.id = id_num++;
-            m.type = m.SPHERE;
-            m.pose.position.x = leg.position.x;
-            m.pose.position.y = leg.position.y;
-            m.pose.position.z = 0.2;
-            m.scale.x = 0.13;
-            m.scale.y = 0.13;
-            m.scale.z = 0.13;
-            m.color.a = 1;
-            m.color.r = leg.confidence;
-            m.color.g = leg.confidence;
-            m.color.b = leg.confidence;
-            m.lifetime = rclcpp::Duration(marker_display_lifetime_);
-            markers_pub_->publish(m);
+            leg_l_marker = fill_marker(leg_l, scan->header.stamp, id_num++, leg_l_vel, true);
+            markers_pub_->publish(leg_l_marker);
+            
+            leg_r_marker = fill_marker(leg_r, scan->header.stamp, id_num++, leg_r_vel, false);
+            markers_pub_->publish(leg_r_marker);
 
-            // Comparison using '==' and not '>=' is important, as it allows <max_detected_clusters_>=-1 
-            // to publish infinite markers
-            if (clusters_published_counter == max_detected_clusters_) 
-                break;
+            // save data for next iteration
+            prev_leg_r_timestamp_ = leg_r_timestamp;
+            prev_leg_l_timestamp_ = leg_l_timestamp;
+            prev_leg_l_ = leg_l;
+            prev_leg_r_ = leg_r;
         }
-        //debug_file.close();
+        else if (leg_set.size() == 1)
+        {
+            leg_l = *std::next(leg_set.begin(), 0);
+            // left is y<0
+            if (leg_l.position.y<0){
+                leg_l_timestamp = this->now();
+
+                // get speeds
+                leg_l_vel = get_speed(leg_l, leg_l_timestamp, prev_leg_l_, prev_leg_l_timestamp_);
+
+                // Publish to /detected_leg_clusters topic
+                leg_l_marker = fill_marker(leg_l, scan->header.stamp, id_num++, leg_l_vel, true);
+                markers_pub_->publish(leg_l_marker);      
+
+                // save data for next iteration
+                prev_leg_l_timestamp_ = leg_l_timestamp;
+                prev_leg_l_ = leg_l;
+                RCLCPP_WARN(this->get_logger(), "Lost right leg");
+
+            } else {
+                leg_r = *std::next(leg_set.begin(), 0);
+                leg_r_timestamp = this->now();
+                // get speeds
+                leg_r_vel = get_speed(leg_r, leg_r_timestamp, prev_leg_r_, prev_leg_r_timestamp_);
+                print_leg(leg_r, "right_s");
+
+                // Publish to /detected_leg_clusters topic
+                leg_r_marker = fill_marker(leg_r, scan->header.stamp, id_num++, leg_r_vel, false);
+                markers_pub_->publish(leg_r_marker);
+                // save data for next iteration
+                prev_leg_r_timestamp_ = leg_r_timestamp;
+                prev_leg_r_ = leg_r;
+                RCLCPP_WARN(this->get_logger(), "Lost left leg");
+
+            }
+            detected_leg_clusters.legs.push_back(leg_l);            
+            clusters_published_counter=1;
+        } else if (leg_set.size() == 0) {
+            RCLCPP_WARN(this->get_logger(), "No leg found");
+        }
+
 
         // Clear remaining markers in Rviz
         for (int id_num_diff = num_prev_markers_published_-id_num; id_num_diff > 0; id_num_diff--) 
@@ -347,6 +402,66 @@ private:
         num_prev_markers_published_ = id_num; // For the next callback
         detected_leg_clusters_pub_->publish(detected_leg_clusters);
         cvReleaseMat(&tmp_mat);
+    }
+
+    visualization_msgs::msg::Marker fill_marker(leg_detector_msgs::msg::Leg leg, 
+                                                rclcpp::Time stamp, int id, double speed, bool left) {
+            visualization_msgs::msg::Marker m;
+            m.header.stamp = stamp;
+            m.header.frame_id = fixed_frame_;
+            m.ns = "LEGS";
+            m.id = id;
+            if (left)
+                m.type = m.SPHERE;
+            else
+                m.type = m.CUBE;
+            m.pose.position.x = leg.position.x;
+            m.pose.position.y = leg.position.y;
+            m.pose.position.z = 0.2;
+            m.scale.x = 0.13;
+            m.scale.y = 0.13;
+            m.scale.z = 0.13;
+            m.color.a = leg.confidence;
+            m.color.r = 0;
+            m.color.g = 0;
+            m.color.b = 0;            
+            if (speed>0.1){
+                m.color.b = 1;
+            } else if (speed<-0.1){
+                m.color.r = 1;
+            }
+
+            m.lifetime = rclcpp::Duration(marker_display_lifetime_);
+            return m;
+        }
+
+    void print_leg(leg_detector_msgs::msg::Leg leg, std::string text){
+        
+        RCLCPP_INFO(this->get_logger(), "Leg %s: %3.3f, %3.3f (%3.3f)", text.c_str(), leg.position.x, leg.position.y, leg.confidence);
+
+    }
+
+    double get_speed(leg_detector_msgs::msg::Leg leg, rclcpp::Time leg_timestamp, 
+                     leg_detector_msgs::msg::Leg prev_leg, rclcpp::Time prev_leg_timestamp){
+        
+        double inc_dist, inc_t, vel;
+
+        vel = 0;
+        inc_dist = leg.position.x - prev_leg.position.x;
+
+        if ((leg_timestamp.nanoseconds()>0) && (prev_leg_timestamp.nanoseconds()>0)) {
+            inc_t = (leg_timestamp - prev_leg_timestamp).nanoseconds() / 1e9;
+            vel = inc_dist / inc_t;
+        }
+     
+        return vel;
+    }
+
+    float inc_d( leg_detector_msgs::msg::Leg a, leg_detector_msgs::msg::Leg b){
+        float inc_x = a.position.x - b.position.x;
+        float inc_y = a.position.y - b.position.y;
+        float inc_d = pow( (inc_x*inc_x) + (inc_y*inc_y), 1. / 2.);
+        return inc_d;
     }
 
     /**
