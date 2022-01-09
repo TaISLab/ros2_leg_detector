@@ -19,7 +19,9 @@ find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Leg.msg"
-  "msg/LegArray.msg"
+  "msg/LegArray.msg"  
+  "msg/Step.msg"
+  "msg/StepArray.msg"
   "msg/Person.msg"
   "msg/PersonArray.msg"
   DEPENDENCIES geometry_msgs std_msgs
