@@ -36,7 +36,7 @@ find_package(message_filters REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
-# executable
+# detect_steps executable
 add_executable (detect_steps
                 src/detect_steps.cpp
                 src/laser_processor.cpp
@@ -48,6 +48,17 @@ ament_target_dependencies(detect_steps rclcpp leg_detector_msgs OpenCV sensor_ms
   
 install (TARGETS
 detect_steps
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# plot_steps executable
+add_executable (plot_steps
+                src/plot_steps.cpp
+                )
+ament_target_dependencies(plot_steps rclcpp leg_detector_msgs visualization_msgs) 
+  
+install (TARGETS
+plot_steps
   DESTINATION lib/${PROJECT_NAME}
 )
 

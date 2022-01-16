@@ -83,10 +83,10 @@ public:
         this->declare_parameter("max_detect_distance");
         this->declare_parameter("use_scan_header_stamp_for_tfs");
         this->declare_parameter("max_detected_clusters");
-
+        
         this->get_parameter_or("scan_topic", scan_topic, std::string("/scan"));
         this->get_parameter_or("fixed_frame", fixed_frame_, std::string("laser"));
-        this->get_parameter_or("forest_file", forest_file, std::string("./src/leg_detector/config/trained_leg_detector_res=0.33.yaml"));
+        this->get_parameter_or("forest_file", forest_file, std::string("./src/leg_detector/config/trained_leg_detector_res_0.33.yaml"));
         this->get_parameter_or("detection_threshold", detection_threshold_, -1.0);
         this->get_parameter_or("cluster_dist_euclid", cluster_dist_euclid_, 0.13);
         this->get_parameter_or("min_points_per_cluster", min_points_per_cluster_, 3);

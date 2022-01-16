@@ -47,13 +47,28 @@ def generate_launch_description():
             executable="detect_steps",
             name="detect_steps",
             parameters= [
-                {"forest_file" : forest_file_path},
-                {"marker_display_lifetime": 0.01},
-                {"max_detected_clusters": 2},
-                {"detect_distance_frame_id": "base_link"},
-                {"max_detect_distance": 0.45},
                 {"scan_topic" : "/scan_filtered2"},
                 {"fixed_frame" : "laser"},
+                {"forest_file" : forest_file_path},
+                {"detection_threshold": 0.01},
+                {"cluster_dist_euclid": 0.13},
+                {"min_points_per_cluster":  3},
+                {"detect_distance_frame_id": "base_link"},
+                {"max_detect_distance": 0.45},
+                {"use_scan_header_stamp_for_tfs": False},
+                {"max_detected_clusters": 2}
+            ]
+    )
+
+    # Launching detect_leg_clusters node
+    plot_leg_clusters_node = Node(
+            package="step_detector",
+            executable="plot_steps",
+            name="plot_steps",
+            parameters= [
+                {"marker_display_lifetime": 0.2},
+                {"steps_topic_name" : "/detected_steps"},
+                {"speed_dead_zone": 0.1}
             ]
     )
 
@@ -75,6 +90,7 @@ def generate_launch_description():
     ld.add_action(laser_filter2_node)
     ld.add_action(rosbag_cmd)
     ld.add_action(detect_leg_clusters_node)
+    ld.add_action(plot_leg_clusters_node)
     ld.add_action(rviz_cmd) 
     return ld 
  
