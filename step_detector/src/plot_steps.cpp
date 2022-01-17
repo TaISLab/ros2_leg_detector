@@ -90,11 +90,16 @@ private:
             
             leg_l_marker = fill_marker(stepsArr->steps[0], stepsArr->header, 0, true);            
             markers_pub_->publish(leg_l_marker);
+            leg_l_marker = fill_text_marker(stepsArr->steps[0], stepsArr->header, 0, true);            
+            markers_pub_->publish(leg_l_marker);
         }
         
         if (stepsArr->steps[0].leg.confidence>0){
             leg_r_marker = fill_marker(stepsArr->steps[1], stepsArr->header, 1, false);
             markers_pub_->publish(leg_r_marker);
+            leg_r_marker = fill_text_marker(stepsArr->steps[1], stepsArr->header, 1, false);
+            markers_pub_->publish(leg_r_marker);
+
         }
 
     }
@@ -128,7 +133,29 @@ private:
         return m;
     }
 
-
+    visualization_msgs::msg::Marker fill_text_marker(leg_detector_msgs::msg::Step step, std_msgs::msg::Header header, int id, bool left) {
+        visualization_msgs::msg::Marker m;
+        m.header = header;
+        m.ns = "LEGS_TEXT";
+        m.id = id;
+        m.type = m.TEXT_VIEW_FACING;
+        if (left)
+            m.text = "left_leg";
+        else
+            m.text = "right_leg";
+        m.pose.position.x = step.leg.position.x -0.1;
+        m.pose.position.y = step.leg.position.y;
+        m.pose.position.z = 1.5;
+        m.scale.x = 0.05;
+        m.scale.y = 0.05;
+        m.scale.z = 0.05;
+        m.color.a = 1.0; // Don't forget to set the alpha!
+        m.color.r = 1;
+        m.color.g = 1;
+        m.color.b = 1;  
+        m.lifetime = rclcpp::Duration(marker_display_lifetime_);
+        return m;
+    }
 
 
 };
