@@ -28,8 +28,8 @@ def generate_launch_description():
                      ("scan_filtered", "scan_filtered2")]
     )
 
-    # Launching detect_leg_clusters node
-    detect_leg_clusters_node = Node(
+    # Launching detect_steps node
+    detect_steps_node = Node(
             package="step_detector",
             executable="detect_steps",
             name="detect_steps",
@@ -48,7 +48,7 @@ def generate_launch_description():
     )
 
     ld.add_action(laser_filter2_node)
-    ld.add_action(detect_leg_clusters_node)
+    ld.add_action(detect_steps_node)
 
     return ld 
  

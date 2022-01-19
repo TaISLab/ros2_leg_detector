@@ -299,7 +299,7 @@ private:
 
         // Publish detected legs to /detected_leg_clusters and to rviz
         // They are ordered in leg_set from closest to the laser scanner to furthest
-        int clusters_published_counter = 0;
+        //int clusters_published_counter = 0;
         int id_num = 1;
         double leg_r_vel, leg_l_vel;
         visualization_msgs::msg::Marker leg_l_marker, leg_r_marker;
@@ -323,7 +323,7 @@ private:
 
             detected_leg_clusters.legs.push_back(leg_l);
             detected_leg_clusters.legs.push_back(leg_r);            
-            clusters_published_counter=2;
+            //clusters_published_counter=2;
 
             // get speeds
             leg_r_vel = get_speed(leg_r, leg_r_timestamp, prev_leg_r_, prev_leg_r_timestamp_);
@@ -380,7 +380,7 @@ private:
 
             }
             detected_leg_clusters.legs.push_back(leg_l);            
-            clusters_published_counter=1;
+            //clusters_published_counter=1;
         } else if (leg_set.size() == 0) {
             RCLCPP_WARN(this->get_logger(), "No leg found");
         }

@@ -83,7 +83,8 @@ public:
         this->declare_parameter("max_detect_distance");
         this->declare_parameter("use_scan_header_stamp_for_tfs");
         this->declare_parameter("max_detected_clusters");
-        
+        this->declare_parameter("detected_steps_topic_name");
+
         this->get_parameter_or("scan_topic", scan_topic, std::string("/scan"));
         this->get_parameter_or("fixed_frame", fixed_frame_, std::string("laser"));
         this->get_parameter_or("forest_file", forest_file, std::string("./src/leg_detector/config/trained_leg_detector_res_0.33.yaml"));
@@ -94,6 +95,8 @@ public:
         this->get_parameter_or("max_detect_distance", max_detect_distance_, 10.0);
         this->get_parameter_or("use_scan_header_stamp_for_tfs", use_scan_header_stamp_for_tfs_, false);
         this->get_parameter_or("max_detected_clusters", max_detected_clusters_, -1);
+        this->get_parameter_or("detected_steps_topic_name", detected_steps_topic_name_, std::string("/detected_steps"));
+
 
         //Print the ROS parameters
         RCLCPP_INFO(this->get_logger(), "forest_file: %s", forest_file.c_str());
@@ -120,7 +123,7 @@ public:
               * This node will subscribe to
               *  scan_topic
             ***/
-        detected_steps_pub_ = this->create_publisher<leg_detector_msgs::msg::StepArray>("detected_steps", 20);
+        detected_steps_pub_ = this->create_publisher<leg_detector_msgs::msg::StepArray>(detected_steps_topic_name_, 20);
         this->scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(scan_topic, default_qos, std::bind(&DetectSteps::laserCallback, this, std::placeholders::_1));
 
         buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -167,6 +170,7 @@ private:
     rclcpp::Time prev_leg_l_timestamp_;
 
     //create the publisher and subscribers
+    std::string  detected_steps_topic_name_;
     rclcpp::Publisher<leg_detector_msgs::msg::StepArray>::SharedPtr detected_steps_pub_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
 
