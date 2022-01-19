@@ -85,23 +85,24 @@ private:
 
     void stepsCallback(const leg_detector_msgs::msg::StepArray::SharedPtr stepsArr){
 
-
-        if (stepsArr->steps[0].leg.confidence>0){
-            
-            leg_l_marker = fill_marker(stepsArr->steps[0], stepsArr->header, 0, true);            
-            markers_pub_->publish(leg_l_marker);
-            leg_l_marker = fill_text_marker(stepsArr->steps[0], stepsArr->header, 0, true);            
-            markers_pub_->publish(leg_l_marker);
-        }
-        
-        if (stepsArr->steps[0].leg.confidence>0){
-            leg_r_marker = fill_marker(stepsArr->steps[1], stepsArr->header, 1, false);
-            markers_pub_->publish(leg_r_marker);
-            leg_r_marker = fill_text_marker(stepsArr->steps[1], stepsArr->header, 1, false);
-            markers_pub_->publish(leg_r_marker);
-
+        if (stepsArr->steps.size()>0){
+            if (stepsArr->steps[0].leg.confidence>0){
+                
+                leg_l_marker = fill_marker(stepsArr->steps[0], stepsArr->header, 0, true);            
+                markers_pub_->publish(leg_l_marker);
+                leg_l_marker = fill_text_marker(stepsArr->steps[0], stepsArr->header, 0, true);            
+                markers_pub_->publish(leg_l_marker);
+            }
         }
 
+        if (stepsArr->steps.size()>1){
+            if (stepsArr->steps[1].leg.confidence>0){
+                leg_r_marker = fill_marker(stepsArr->steps[1], stepsArr->header, 1, false);
+                markers_pub_->publish(leg_r_marker);
+                leg_r_marker = fill_text_marker(stepsArr->steps[1], stepsArr->header, 1, false);
+                markers_pub_->publish(leg_r_marker);
+            }
+        }
     }
 
     visualization_msgs::msg::Marker fill_marker(leg_detector_msgs::msg::Step step, std_msgs::msg::Header header, int id, bool left) {
