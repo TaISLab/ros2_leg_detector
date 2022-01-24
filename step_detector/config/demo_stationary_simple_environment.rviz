@@ -9,11 +9,14 @@ Panels:
         - /Grid1
         - /LaserScan FILTERED1
         - /LaserScan FEET1
+        - /Odometry1
         - /Odometry1/Shape1
         - /TF1
         - /TF1/Frames1
         - /Marker1
+        - /Marker1/Namespaces1
         - /Marker2
+        - /Marker2/Namespaces1
       Splitter Ratio: 0.5
     Tree Height: 759
   - Class: rviz_common/Selection
@@ -199,7 +202,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: false
+      Enabled: true
       Keep: 1000
       Name: Odometry
       Position Tolerance: 0.10000000149011612
@@ -207,11 +210,11 @@ Visualization Manager:
         Alpha: 1
         Axes Length: 1
         Axes Radius: 0.10000000149011612
-        Color: 255; 25; 0
-        Head Length: 0.10000000149011612
-        Head Radius: 0.05000000074505806
-        Shaft Length: 0.5
-        Shaft Radius: 0.019999999552965164
+        Color: 115; 210; 22
+        Head Length: 0.05000000074505806
+        Head Radius: 0.019999999552965164
+        Shaft Length: 0.25
+        Shaft Radius: 0.009999999776482582
         Value: Arrow
       Topic:
         Depth: 5
@@ -219,7 +222,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /odom
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
@@ -313,7 +316,7 @@ Visualization Manager:
       Name: Marker
       Namespaces:
         LEGS: true
-        LEGS_TEXT: true
+        LEGS_TEXT: false
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -392,7 +395,7 @@ Visualization Manager:
       Enabled: true
       Name: Marker
       Namespaces:
-        {}
+        forces: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -403,7 +406,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 186; 189; 182
-    Fixed Frame: base_footprint
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -442,21 +445,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: -1.5749973058700562
-      Class: rviz_default_plugins/TopDownOrtho
+      Class: rviz_default_plugins/ThirdPersonFollower
+      Distance: 2.1966514587402344
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 0.11222466826438904
+        Y: -0.4383115768432617
+        Z: -0.07499833405017853
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 668.5574951171875
-      Target Frame: <Fixed Frame>
-      Value: TopDownOrtho (rviz_default_plugins)
-      X: 0.14419804513454437
-      Y: -0.05803351849317551
+      Pitch: 0.9847966432571411
+      Target Frame: base_link
+      Value: ThirdPersonFollower (rviz_default_plugins)
+      Yaw: 4.147390842437744
     Saved: ~
 Window Geometry:
   Displays:

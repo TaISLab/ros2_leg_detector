@@ -64,7 +64,7 @@ def generate_launch_description():
     plot_leg_clusters_node = Node(
             package="step_detector",
             executable="plot_steps",
-            name="plot_steps",
+            name="plot_step_legs",
             parameters= [
                 {"marker_display_lifetime": 0.2},
                 {"steps_topic_name" : "/detected_steps"},
@@ -72,21 +72,31 @@ def generate_launch_description():
             ]
     )
 
-    # Launching joint_leg_tracker node
-    joint_leg_tracker_node = Node(
-        package="step_detector",
-        executable="joint_leg_tracker.py",
-        name="joint_leg_tracker",
-        parameters=[
-            {"scan_topic" : "/scan_filtered2"},
-            {"fixed_frame" : "laser"},
-            {"scan_frequency" : 5},
-            {"display_detected_people": True},
-            {"in_free_space_threshold": 0.2},
-            {"dist_travelled_together_to_initiate_leg_pair": 0.02}
-        ]    
+    # View forces on handles     
+    plot_handle_forces_node = Node(
+        package="walker_plot",
+        executable="plot_forces",
+        name="plot_handle_forces"
     )
 
+    # loads on legs
+    partial_load_legs_node = Node(
+        package="walker_loads",
+        executable="partial_loads",
+        name="partial_load_legs"
+    )
+
+    # View loads on legs
+    plot_load_legs_node = Node(
+        package="walker_loads",
+        executable="plot_loads",
+        name="plot_load_legs",
+        on_exit=launch.actions.Shutdown()
+    )
+
+    #ld.add_action(partial_load_legs_node)
+    ld.add_action(plot_handle_forces_node)
+    #ld.add_action(plot_load_legs_node)
     ld.add_action(laser_filter2_node)
     ld.add_action(rosbag_cmd)
     ld.add_action(detect_leg_clusters_node)
