@@ -336,7 +336,7 @@ private:
             step_r.speed = 0;
             // left is y<0
             if (step_l.leg.position.y<0){
-                RCLCPP_WARN(this->get_logger(), "Only left leg found");
+                //RCLCPP_WARN(this->get_logger(), "Only left leg found");
                 leg_l_timestamp = this->now();
 
                 // get speeds
@@ -345,13 +345,12 @@ private:
                 // save data for next iteration
                 prev_leg_l_timestamp_ = leg_l_timestamp;
                 prev_leg_l_ = step_l.leg;
-                RCLCPP_WARN(this->get_logger(), "Lost right leg");
-
+                //RCLCPP_WARN(this->get_logger(), "Lost right leg");
             } else {
                 step_r.leg = *std::next(leg_set.begin(), 0);
                 step_l.leg.confidence = 0;
                 step_l.speed = 0;
-                RCLCPP_WARN(this->get_logger(), "Only right leg found");
+                //RCLCPP_WARN(this->get_logger(), "Only right leg found");
                 leg_r_timestamp = this->now();
                 // get speeds
                 step_r.speed = get_speed(step_r.leg, leg_r_timestamp, prev_leg_r_, prev_leg_r_timestamp_);
@@ -360,13 +359,13 @@ private:
                 // save data for next iteration
                 prev_leg_r_timestamp_ = leg_r_timestamp;
                 prev_leg_r_ = step_r.leg;
-                RCLCPP_WARN(this->get_logger(), "Lost left leg");
+                //RCLCPP_WARN(this->get_logger(), "Lost left leg");
 
             }
             detected_steps.steps.push_back(step_l);
             detected_steps.steps.push_back(step_r);     
         } else if (leg_set.size() == 0) {
-            RCLCPP_WARN(this->get_logger(), "No leg found");
+            //RCLCPP_WARN(this->get_logger(), "No leg found");            
         }
 
         detected_steps_pub_->publish(detected_steps);
