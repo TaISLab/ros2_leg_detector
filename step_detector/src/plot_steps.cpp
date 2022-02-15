@@ -86,8 +86,7 @@ private:
     void stepsCallback(const leg_detector_msgs::msg::StepArray::SharedPtr stepsArr){
 
         if (stepsArr->steps.size()>0){
-            if (stepsArr->steps[0].leg.confidence>0){
-                
+            if (stepsArr->steps[0].leg.confidence>0){       
                 leg_l_marker = fill_marker(stepsArr->steps[0], stepsArr->header, 0, true);            
                 markers_pub_->publish(leg_l_marker);
                 leg_l_marker = fill_text_marker(stepsArr->steps[0], stepsArr->header, 0, true);            
@@ -141,9 +140,9 @@ private:
         m.id = id;
         m.type = m.TEXT_VIEW_FACING;
         if (left)
-            m.text = "left_leg";
+            m.text = "left_leg" ; //+ std::to_string(step.speed);
         else
-            m.text = "right_leg";
+            m.text = "right_leg"; //    +std::to_string(step.speed);
         m.pose.position.x = step.leg.position.x -0.1;
         m.pose.position.y = step.leg.position.y;
         m.pose.position.z = 1.5;
